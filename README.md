@@ -24,8 +24,9 @@
 
 - Node.js 18.17 或更高版本
 - npm 9.0 或更高版本
+- Git
 
-### 安装步骤
+### 首次部署步骤
 
 1. 克隆项目
 ```bash
@@ -42,30 +43,43 @@ npm install
 ```bash
 # 复制环境变量模板文件
 cp .env.example .env
+```
 
-# 修改 .env 文件中的配置
-NEXT_PUBLIC_USERNAME=admin  # 管理员用户名
-AUTH_PASSWORD=password      # 管理员密码
+编辑 .env 文件，设置以下必需的环境变量：
+```env
+# 管理员登录凭据
+ADMIN_USERNAME=your_username    # 管理员用户名
+ADMIN_PASSWORD=your_password    # 管理员密码
 ```
 
 4. 初始化数据库
 ```bash
-# 创建数据库目录
-mkdir -p database/data
-
-# 生成 Prisma Client
-npm run db:generate
-
-# 应用数据库迁移
-npm run db:push
+# 初始化数据库(包含创建目录、生成Client和迁移)
+npm run init
 ```
 
-5. 启动开发服务器
+
+5. 构建并启动应用
+```bash
+# 构建生产版本
+npm run build
+
+# 启动生产服务器
+npm run start
+```
+
+现在可以访问 [http://localhost:9520](http://localhost:9520) 查看应用。
+
+### 开发环境设置
+
+如果您需要在开发环境中运行项目：
+
+1. 完成上述 1-4 步骤
+
+2. 启动开发服务器
 ```bash
 npm run dev
 ```
-
-访问 [http://localhost:3000](http://localhost:3000) 查看应用。
 
 ### 项目结构
 
@@ -73,17 +87,21 @@ npm run dev
 xiaobot-nav/
 ├── database/               # 数据库相关文件
 │   ├── data/              # SQLite 数据库文件
-│   └── prisma/            # Prisma 配置和模型
+│   ├── prisma/            # Prisma 配置和模型
+│   └── scripts/           # 数据库脚本
 ├── src/
-│   ├── app/               # Next.js 应用路由
-│   ├── components/        # React 组件
-│   ├── lib/              # 工具函数和库
-│   ├── hooks/            # React Hooks
-│   └── services/         # 服务层代码
-└── public/               # 静态资源
+│   ├── app/              # Next.js 应用路由
+│   │   ├── api/         # API 路由
+│   │   └── (routes)/    # 页面路由
+│   ├── components/      # React 组件
+│   ├── lib/            # 工具函数和库
+│   ├── hooks/          # React Hooks
+│   └── services/       # 服务层代码
+├── public/             # 静态资源
+└── middleware.ts       # Next.js 中间件
 ```
 
-### 开发命令
+### 常用开发命令
 
 ```bash
 # 开发环境
@@ -98,31 +116,65 @@ npm run start
 # 代码检查
 npm run lint
 
-# 生成 Prisma Client
-npm run db:generate
+# 数据库相关命令
+npm run prisma:generate    # 生成 Prisma Client
+npm run prisma:migrate     # 应用数据库迁移
+npm run prisma:studio     # 启动 Prisma Studio 查看数据
+npm run prisma:migrate:dev # 开发环境数据库迁移
+npm run prisma:seed       # 填充示例数据
 
-# 应用数据库迁移
-npm run db:push
+# 数据库维护
+npm run init            # 初始化数据库
+npm run backup         # 备份数据库
+npm run auto-upgrade   # 自动升级数据库
 ```
 
-## 部署
+## 部署注意事项
 
-1. 构建项目
-```bash
-npm run build
-```
+1. 数据库相关：
+   - 数据库文件默认位于 `database/data/database.db`
+   - 确保数据库目录具有正确的读写权限
+   - 建议定期备份数据库文件
+   - 首次部署时必须手动创建 database/data 目录
 
-2. 启动生产服务器
-```bash
-npm run start
-```
+2. 环境变量：
+   - 生产环境必须设置 ADMIN_USERNAME 和 ADMIN_PASSWORD
+   - 请使用安全的密码，避免使用默认值
+   - 不要将 .env 文件提交到代码仓库
 
-## 注意事项
+3. 权限设置：
+   - 确保运行应用的用户对以下目录有读写权限：
+     - database/data/
+     - .next/
+     - node_modules/
 
-- 数据库文件位于 `database/data/database.db`
-- 请确保数据库目录具有正确的读写权限
-- 生产环境部署前请修改管理员密码
-- 建议定期备份数据库文件
+4. 性能优化：
+   - 启用 Node.js 的 --optimize_for_size 标志可减少内存使用
+   - 考虑使用 PM2 等进程管理器
+   - 建议配置 Nginx 反向代理
+
+## 故障排除
+
+常见问题：
+
+1. 数据库连接错误
+   - 检查 DATABASE_URL 配置
+   - 验证数据库目录权限
+   - 确保已运行数据库迁移命令
+
+2. 登录失败
+   - 确认环境变量 ADMIN_USERNAME 和 ADMIN_PASSWORD 已正确设置
+   - 检查 .env 文件是否被正确加载
+
+3. 构建失败
+   - 清理 .next 目录后重新构建
+   - 确保 Node.js 版本符合要求
+   - 检查依赖项是否完整安装
+
+## 升级注意事项
+
+请参考 UPGRADE.md 文件
+
 
 ## 许可证
 
