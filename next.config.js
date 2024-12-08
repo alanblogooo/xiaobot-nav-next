@@ -14,7 +14,7 @@ const nextConfig = {
       config.externals = [...config.externals, 'puppeteer-core']
     }
     return config
-  },
+  }
 }
 
 module.exports = nextConfig

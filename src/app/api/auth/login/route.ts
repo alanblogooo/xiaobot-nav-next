@@ -11,11 +11,9 @@ export async function POST(request: Request) {
       NODE_ENV: process.env.NODE_ENV,
       REQUEST_URL: request.url,
       METHOD: request.method,
-    })
-    
-    console.log('环境变量:', {
-      ADMIN_USERNAME: process.env.ADMIN_USERNAME ? '已设置' : '未设置',
-      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? '已设置' : '未设置',
+      ENV_SOURCE: '.env file',
+      ADMIN_USERNAME_EXISTS: !!process.env.ADMIN_USERNAME,
+      ADMIN_PASSWORD_EXISTS: !!process.env.ADMIN_PASSWORD
     })
 
     // 验证环境变量是否存在
@@ -27,14 +25,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '服务器配置错误' }, { status: 500 })
     }
 
-    // 打印认证结果
+    // 打印认证结果（不输出实际密码）
     const isValidUsername = username === ADMIN_USERNAME
     const isValidPassword = password === ADMIN_PASSWORD
-    console.log('认���结果:', {
+    console.log('认证结果:', {
       isValidUsername,
       isValidPassword,
-      username,
-      providedUsername: ADMIN_USERNAME,
+      providedUsername: username,
+      expectedUsername: ADMIN_USERNAME,
+      passwordProvided: !!password,
+      passwordConfigured: !!ADMIN_PASSWORD
     })
 
     // 验证用户名和密码
@@ -42,12 +42,17 @@ export async function POST(request: Request) {
       // 设置登录 cookie
       const cookieOptions = {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax' as const,
         path: '/',
+        maxAge: 7 * 24 * 60 * 60 // 7天
       }
       
-      console.log('设置 cookie:', cookieOptions)
+      console.log('设置 cookie:', {
+        ...cookieOptions,
+        name: 'auth',
+        value: 'true'
+      })
       
       cookies().set('auth', 'true', cookieOptions)
       return NextResponse.json({ success: true })
