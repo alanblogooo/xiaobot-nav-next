@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import puppeteer, { Browser } from 'puppeteer-core';
+import { chromium } from 'playwright';
+import type { Browser } from 'playwright';
+import { execSync } from 'child_process';
 
 export async function POST(request: Request) {
   let browser: Browser | null = null;
@@ -20,21 +22,62 @@ export async function POST(request: Request) {
       );
     }
 
-    browser = await puppeteer.launch({
-      headless: true,
-      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      args: ['--no-sandbox']
+    try {
+      console.log('正在启动浏览器...');
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-sandbox',
+          '--disable-setuid-sandbox'
+        ]
+      }).catch(async (error) => {
+        console.error('浏览器启动失败，尝试重新安装:', error);
+        try {
+          execSync('npx playwright install chromium', { stdio: 'inherit' });
+          // 重新尝试启动
+          return await chromium.launch({
+            headless: true,
+            args: [
+              '--disable-dev-shm-usage',
+              '--disable-gpu',
+              '--no-sandbox',
+              '--disable-setuid-sandbox'
+            ]
+          });
+        } catch (installError) {
+          console.error('浏览器安装失败:', installError);
+          throw new Error('浏览器安装失败，请联系管理员');
+        }
+      });
+
+      if (!browser) {
+        throw new Error('浏览器启动失败');
+      }
+
+      console.log('浏览器启动成功');
+    } catch (error: unknown) {
+      console.error('启动浏览器失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      return NextResponse.json(
+        { error: `启动浏览器失败：${errorMessage}` },
+        { status: 500 }
+      );
+    }
+
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      ignoreHTTPSErrors: true
     });
 
     const results = await Promise.all(
       urls.map(async (url) => {
-        const page = await browser!.newPage();
+        const page = await context.newPage();
         try {
-          await page.setViewport({ width: 1280, height: 800 });
-          
-          console.log('正在访问页面:', url);
+          console.log('正在访问��面:', url);
           await page.goto(url, {
-            waitUntil: 'networkidle0',
+            waitUntil: 'networkidle',
             timeout: 30000
           });
 
@@ -113,8 +156,9 @@ export async function POST(request: Request) {
 
           console.log('抓取到的数据:', data);
           return { ...data, url };
-        } catch (error) {
-          console.error(`抓取错误 ${url}:`, error);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          console.error(`抓取错误 ${url}:`, errorMessage);
           return null;
         } finally {
           await page.close();
@@ -122,14 +166,16 @@ export async function POST(request: Request) {
       })
     );
 
+    await context.close();
     const validResults = results.filter((result): result is NonNullable<typeof result> => result !== null);
     console.log('有效结果:', validResults);
 
     return NextResponse.json(validResults);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('预览失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
     return NextResponse.json(
-      { error: '预览失败' },
+      { error: `预览失败：${errorMessage}` },
       { status: 500 }
     );
   } finally {

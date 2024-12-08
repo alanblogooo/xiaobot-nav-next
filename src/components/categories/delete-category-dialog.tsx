@@ -34,22 +34,24 @@ export function DeleteCategoryDialog({
       const response = await fetch(`/api/categories/${category.id}`, {
         method: 'DELETE',
       })
-      const data = await response.json().catch(() => null)
       
+      const data = response.status !== 204 ? await response.json() : null
+
       if (response.status === 204) {
+        toast.success("删除成功")
         onOpenChange(false)
         onSuccess?.()
-        toast.success("删除成功")
       } else if (data?.error === "CATEGORY_HAS_COLUMNS") {
-        toast.error(data.message || "该分类下存在专栏，无法删除。请先移除或修改相关专栏的分类。")
+        toast.error(data.message)
       } else if (data?.error === "Category not found") {
-        toast.error("分类不存在或已被删除")
+        toast.error(data.message)
         onOpenChange(false)
+        onSuccess?.()
       } else {
         toast.error(data?.message || "删除失败，请重试")
       }
     } catch (error) {
-      console.error("Failed to delete category:", error)
+      console.error("删除分类请求失败:", error)
       toast.error("删除失败，请重试")
     } finally {
       setIsDeleting(false)
