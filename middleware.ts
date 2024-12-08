@@ -2,25 +2,30 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const authCookie = request.cookies.get('auth')
-  
-  // 检查是否访问的是需要保护的路由
-  if (request.nextUrl.pathname.startsWith('/user')) {
-    if (!authCookie || authCookie.value !== 'true') {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  // 1. 检查是否是登录页面
+  if (request.nextUrl.pathname === '/login') {
+    return NextResponse.next()
   }
 
-  // 如果已经登录，访问登录页面时重定向到用户页面
-  if (request.nextUrl.pathname === '/login') {
-    if (authCookie && authCookie.value === 'true') {
-      return NextResponse.redirect(new URL('/user', request.url))
-    }
+  // 2. 检查是否已登录
+  const token = request.cookies.get('token')
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return NextResponse.next()
 }
 
+// 配置需要进行中间件检查的路径
 export const config = {
-  matcher: ['/user/:path*', '/login'],
+  matcher: [
+    /*
+     * 匹配所有路径，但不包括:
+     * /api/auth/login (登录API)
+     * /login (登录页面)
+     * /_next (Next.js 静态文件)
+     * /favicon.ico (浏览器图标)
+     */
+    '/((?!api/auth/login|login|_next|favicon.ico).*)',
+  ],
 } 

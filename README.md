@@ -26,6 +26,92 @@
 - npm 9.0 或更高版本
 - Git
 
+### 生产环境部署
+
+1. 配置环境变量
+```bash
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件
+vim .env
+```
+
+确保 .env 文件包含以下配置：
+```env
+# 管理员登录凭据
+ADMIN_USERNAME=your_username
+ADMIN_PASSWORD=your_password
+```
+
+2. 设置文件权限
+```bash
+# 确保 .env 文件权限正确
+chmod 644 .env
+```
+
+3. 构建和启动
+```bash
+# 清理旧的构建文件
+rm -rf .next
+
+# 安装依赖
+npm install
+
+# 构建 (这一步会加载 .env 的环境变量)
+npm run build
+
+# 启动服务 (使用 PM2)
+pm2 start npm --name xiaobot-nav -- start
+```
+
+4. 验证环境变量
+```bash
+# 进入项目目录
+cd xiaobot-nav
+
+# 验证 .env 文件存在
+ls -la .env
+
+# 检查环境变量是否被加载
+pm2 logs xiaobot-nav
+```
+
+### 环境变量故障排除
+
+如果环境变量未正确加载：
+
+1. 确认 .env 文件位置和内容
+```bash
+pwd  # 应该显示项目根目录
+cat .env  # 检查内容是否正确
+```
+
+2. 使用 PM2 显式加载环境变量
+```bash
+pm2 start npm --name xiaobot-nav -- start --env-file .env
+```
+
+3. 或者使用 ecosystem.config.js 配置 PM2
+```bash
+# 创建 PM2 配置文件
+echo 'module.exports = {
+  apps: [{
+    name: "xiaobot-nav",
+    script: "npm",
+    args: "start",
+    env: {
+      NODE_ENV: "production",
+      ADMIN_USERNAME: "admin",
+      ADMIN_PASSWORD: "admin"
+    }
+  }]
+}' > ecosystem.config.js
+
+# 使用配置文件启动
+pm2 start ecosystem.config.js
+```
+
 ### 首次部署步骤
 
 1. 克隆项目
@@ -90,7 +176,7 @@ xiaobot-nav/
 │   ├── prisma/            # Prisma 配置和模型
 │   └── scripts/           # 数据库脚本
 ├── src/
-│   ├── app/              # Next.js 应用路由
+│   ├── app/              # Next.js 应用���由
 │   │   ├── api/         # API 路由
 │   │   └── (routes)/    # 页面路由
 │   ├── components/      # React 组件
