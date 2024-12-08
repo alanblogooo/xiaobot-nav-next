@@ -20,6 +20,7 @@ export async function PATCH(
     })
     return NextResponse.json(column)
   } catch (error) {
+    console.error("Failed to update column:", error)
     return NextResponse.json(
       { error: "Failed to update column" },
       { status: 500 }
@@ -37,6 +38,7 @@ export async function DELETE(
     })
     return new NextResponse(null, { status: 204 })
   } catch (error) {
+    console.error("Failed to delete column:", error)
     return NextResponse.json(
       { error: "Failed to delete column" },
       { status: 500 }

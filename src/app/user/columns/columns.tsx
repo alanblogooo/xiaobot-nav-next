@@ -4,13 +4,7 @@ import * as React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Column, Category } from "@prisma/client"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu"
-import { MoreHorizontal, BookOpen, Edit, Trash2, ExternalLink } from "lucide-react"
+import { BookOpen, Edit, Trash2, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
@@ -33,16 +27,6 @@ import {
 } from "@/components/ui/select"
 import { useCategories } from "@/hooks/use-categories"
 import { toast } from "sonner"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { DataTable } from "@/components/ui/data-table"
 
 // 扩展 Column 类型
 interface ExtendedColumn extends Omit<Column, 'category'> {
@@ -79,6 +63,7 @@ export function BatchActions({
       toast.success("批量删除成功")
       setShowDeleteDialog(false)
     } catch (error) {
+      console.error("批量删除失败:", error)
       toast.error("批量删除失败")
     }
   }
@@ -88,6 +73,7 @@ export function BatchActions({
       await onBatchPublish(selectedIds, publish)
       toast.success(publish ? "批量上架成功" : "批量下架成功")
     } catch (error) {
+      console.error(publish ? "批量上架失败:" : "批量下架失败:", error)
       toast.error(publish ? "批量上架失败" : "批量下架失败")
     }
   }
@@ -103,6 +89,7 @@ export function BatchActions({
       setShowCategoryDialog(false)
       setSelectedCategoryId("")
     } catch (error) {
+      console.error("批量修改分类失败:", error)
       toast.error("批量修改分类失败")
     }
   }

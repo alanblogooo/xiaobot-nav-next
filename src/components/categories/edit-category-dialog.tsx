@@ -50,6 +50,7 @@ export function EditCategoryDialog({
       onSuccess?.()
       toast.success("更新成功")
     } catch (error) {
+      console.error("更新分类失败:", error)
       toast.error("更新失败")
     } finally {
       setIsLoading(false)

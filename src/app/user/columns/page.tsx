@@ -54,10 +54,9 @@ export default function ColumnsPage() {
   const [filters, setFilters] = useState(initialFilters)
   const [activeFilters, setActiveFilters] = useState(initialFilters)
   const [pageIndex, setPageIndex] = useState(0)
-  const [pageSize, setPageSize] = useState(10)
+  const pageSize = 10
   const [selectedRows, setSelectedRows] = useState<ExtendedColumn[]>([])
   const tableRef = useRef<TableRef>(null)
-  const previousSelectedRowsRef = useRef<ExtendedColumn[]>([])
 
   const { data: columns, total, mutate } = useColumns({
     category: activeFilters.category !== "all" ? activeFilters.category : undefined,
@@ -97,15 +96,6 @@ export default function ColumnsPage() {
     setPageIndex(0)
     setFilters(initialFilters)
     setActiveFilters(initialFilters)
-  }, [])
-
-  const handlePageChange = useCallback((page: number) => {
-    setPageIndex(page)
-  }, [])
-
-  const handlePageSizeChange = useCallback((size: number) => {
-    setPageSize(size)
-    setPageIndex(0) // 改变每页条数时重置到第一页
   }, [])
 
   // 为每一行添加操作回调
@@ -174,16 +164,6 @@ export default function ColumnsPage() {
       throw error
     }
   }
-
-  // 优化选择行的处理函数
-  const handleRowSelectionChange = useCallback((rows: ExtendedColumn[]) => {
-    // 如果选择没有实际变化，直接返回
-    if (JSON.stringify(rows) === JSON.stringify(previousSelectedRowsRef.current)) {
-      return
-    }
-    previousSelectedRowsRef.current = rows
-    setSelectedRows(rows)
-  }, [])
 
   return (
     <div className="container mx-auto py-10">
@@ -281,7 +261,7 @@ export default function ColumnsPage() {
           onBatchPublish={handleBatchPublish}
           onBatchUpdateCategory={handleBatchUpdateCategory}
         />
-        <DataTable
+        <DataTable<ExtendedColumn>
           ref={tableRef}
           columns={columnsConfig}
           data={columnsWithCallbacks}
@@ -289,9 +269,8 @@ export default function ColumnsPage() {
           pageIndex={pageIndex}
           pageSize={pageSize}
           total={total}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onRowSelectionChange={handleRowSelectionChange}
+          onPageChange={setPageIndex}
+          onRowSelectionChange={setSelectedRows}
         />
       </div>
 

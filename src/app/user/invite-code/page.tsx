@@ -29,6 +29,7 @@ export default function InviteCodePage() {
       toast.success("邀请码已更新")
       mutate()
     } catch (error) {
+      console.error("更新邀请码失败:", error)
       toast.error("更新邀请码失败")
     } finally {
       setIsUpdating(false)

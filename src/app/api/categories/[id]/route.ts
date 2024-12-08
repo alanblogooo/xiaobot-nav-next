@@ -1,11 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
 
 export async function PATCH(
   request: Request,

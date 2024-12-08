@@ -1,5 +1,3 @@
-import type { Category as PrismaCategory } from "@prisma/client"
-
 export interface Category {
   id: string;
   name: string;

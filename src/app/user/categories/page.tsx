@@ -31,6 +31,7 @@ export default function CategoriesPage() {
       const data = await getCategories()
       setCategories(data)
     } catch (error) {
+      console.error("加载分类失败:", error)
       toast.error("加载分类失败")
     } finally {
       setIsLoading(false)
@@ -54,6 +55,7 @@ export default function CategoriesPage() {
       setNewCategoryName("")
       loadCategories()
     } catch (error) {
+      console.error("创建分类失败:", error)
       toast.error("创建失败")
     } finally {
       setIsCreating(false)

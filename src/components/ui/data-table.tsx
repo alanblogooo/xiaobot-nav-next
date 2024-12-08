@@ -7,12 +7,12 @@ import {
   getCoreRowModel,
   useReactTable,
   RowSelectionState,
-  getPaginationRowModel,
+  Table,
+  Row,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, ChevronsLeft } from "lucide-react"
 
 import {
-  Table,
+  Table as TableUI,
   TableBody,
   TableCell,
   TableHead,
@@ -20,23 +20,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 export interface DataTableProps<TData> {
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TData, unknown>[]
   data: TData[]
   pageCount: number
   pageIndex: number
   pageSize: number
   total: number
   onPageChange: (page: number) => void
-  onPageSizeChange: (size: number) => void
   onRowSelectionChange?: (rows: TData[]) => void
 }
 
@@ -44,19 +36,23 @@ export interface DataTableRef {
   resetSelection: () => void
 }
 
-export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
-  columns,
-  data,
-  pageCount,
-  pageIndex,
-  pageSize,
-  total,
-  onPageChange,
-  onPageSizeChange,
-  onRowSelectionChange,
-}, ref) => {
+export function DataTable<TData>(
+  props: DataTableProps<TData> & { ref?: React.ForwardedRef<DataTableRef> }
+) {
+  const {
+    columns,
+    data,
+    pageCount,
+    pageIndex,
+    pageSize,
+    total,
+    onPageChange,
+    onRowSelectionChange,
+    ref,
+  } = props
+
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
-  const tableInstance = React.useRef<any>(null)
+  const tableInstance = React.useRef<Table<TData> | null>(null)
   const previousSelectionRef = React.useRef<RowSelectionState>({})
   
   const table = useReactTable({
@@ -82,9 +78,6 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
           pageSize,
         })
         onPageChange(newState.pageIndex)
-        if (newState.pageSize !== pageSize) {
-          onPageSizeChange(newState.pageSize)
-        }
       }
     },
     getCoreRowModel: getCoreRowModel(),
@@ -95,7 +88,6 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
 
   // 优化选择状态变化的处理
   React.useEffect(() => {
-    // 如果选择状态没有实际变化，直接返回
     if (JSON.stringify(rowSelection) === JSON.stringify(previousSelectionRef.current)) {
       return
     }
@@ -113,8 +105,8 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
       
       const selectedRows = tableInstance.current
         .getRowModel()
-        .rows.filter((row: any) => rowSelection[row.id])
-        .map((row: any) => row.original)
+        .rows.filter((row: Row<TData>) => rowSelection[row.id])
+        .map((row: Row<TData>) => row.original)
       
       onRowSelectionChange?.(selectedRows)
     })
@@ -137,7 +129,7 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
-        <Table>
+        <TableUI>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -184,44 +176,15 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </TableUI>
       </div>
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="flex items-center space-x-4">
           <div className="text-sm text-muted-foreground">
             共 {total} 条数据
           </div>
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">每页行数</p>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                onPageSizeChange?.(Number(value))
-              }}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span className="sr-only">Go to first page</span>
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -245,6 +208,6 @@ export const DataTable = React.forwardRef<DataTableRef, DataTableProps<any>>(({
       </div>
     </div>
   )
-})
+}
 
 DataTable.displayName = "DataTable"

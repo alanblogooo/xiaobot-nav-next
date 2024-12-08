@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 interface PaginationProps {
@@ -10,7 +9,6 @@ interface PaginationProps {
   pageSize: number
   total: number
   onPageChange: (page: number) => void
-  onPageSizeChange?: (pageSize: number) => void
 }
 
 const PREV_TEXT = "上一页"
@@ -23,7 +21,6 @@ export function Pagination({
   pageSize,
   total,
   onPageChange,
-  onPageSizeChange,
 }: PaginationProps) {
   const totalPages = Math.ceil(total / pageSize)
   

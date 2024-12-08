@@ -55,6 +55,7 @@ export function CreateColumnDialog({
         const data = await getCategories()
         setCategories(data)
       } catch (error) {
+        console.error("加载分类失败:", error)
         toast.error("加载分类失败")
       }
     }
@@ -91,6 +92,7 @@ export function CreateColumnDialog({
       onSuccess?.()
       toast.success("创建成功")
     } catch (error) {
+      console.error("创建专栏失败:", error)
       toast.error("创建失败")
     } finally {
       setIsSubmitting(false)

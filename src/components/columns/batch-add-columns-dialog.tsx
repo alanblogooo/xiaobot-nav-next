@@ -10,10 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  ScrollArea,
-  ScrollBar,
-} from "@/components/ui/scroll-area";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
 import { BookOpen } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
@@ -66,18 +62,13 @@ export function BatchAddColumnsDialog({
   
   const handlePreview = async () => {
     const urlList = urls.split('\n').filter(url => url.trim());
-    if (urlList.length === 0) {
-      toast.error('请输入专栏地址');
+    if (!urlList.length) {
+      toast.error('请输入专栏链接');
       return;
     }
 
     setLoading(true);
     try {
-      if (urlList.length > 50) {
-        toast.error('最多一次添加50个专栏');
-        return;
-      }
-      
       const response = await fetch('/api/columns/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,6 +79,7 @@ export function BatchAddColumnsDialog({
       setPreviewData(data);
       setPageIndex(0); // 重置页码
     } catch (error) {
+      console.error('抓取专栏信息失败:', error);
       toast.error('抓取失败');
     } finally {
       setLoading(false);

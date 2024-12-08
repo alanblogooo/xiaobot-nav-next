@@ -35,9 +35,7 @@ import { getColumns, updateColumn, type Column } from "@/services/columns"
 import { getCategories, type Category } from "@/services/categories"
 import { cn } from "@/lib/utils"
 import useSWR from 'swr'
-
-type SortField = 'createdAt' | 'updatedAt' | 'subscribers' | 'contentCount';
-type SortOrder = 'asc' | 'desc';
+import Image from "next/image"
 
 interface ColumnsTableProps {
   nameFilter?: string
@@ -46,12 +44,21 @@ interface ColumnsTableProps {
   sortField: 'createdAt' | 'updatedAt' | 'subscribers' | 'contentCount'
   sortOrder: 'asc' | 'desc'
   onSortChange: (field: 'createdAt' | 'updatedAt' | 'subscribers' | 'contentCount', order: 'asc' | 'desc') => void
-  onFilterChange: (filter: { categoryFilter?: string }) => void
 }
 
 interface TableRef {
-  resetPage: () => void
-  resetToDefault: () => void
+  resetSelection: () => void
+}
+
+interface ColumnWithBatch extends Column {
+  _batch?: string[];
+}
+
+interface ColumnData {
+  data: Column[];
+  total: number;
+  pageIndex: number;
+  pageSize: number;
 }
 
 export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTableProps>(({
@@ -61,10 +68,9 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
   sortField,
   sortOrder,
   onSortChange,
-  onFilterChange,
 }, ref) => {
   const [pageIndex, setPageIndex] = React.useState(0)
-  const [pageSize, setPageSize] = React.useState(10)
+  const pageSize = 10
   const [editingColumn, setEditingColumn] = React.useState<Column | null>(null)
   const [deletingColumn, setDeletingColumn] = React.useState<Column | null>(null)
   const [selectedColumns, setSelectedColumns] = React.useState<Set<string>>(new Set())
@@ -79,7 +85,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
     () => getCategories()
   )
 
-  const { data, error, mutate } = useSWR(
+  const { data, error, mutate } = useSWR<ColumnData>(
     [
       'columns',
       pageIndex,
@@ -90,21 +96,19 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
       sortField,
       sortOrder,
     ],
-    () =>
-      getColumns({
-        pageIndex,
-        pageSize,
-        name: nameFilter,
-        author: authorFilter,
-        category: categoryFilter,
-        sortField,
-        sortOrder,
-      })
+    () => getColumns({
+      pageIndex,
+      pageSize,
+      name: nameFilter,
+      author: authorFilter,
+      category: categoryFilter,
+      sortField,
+      sortOrder,
+    })
   )
 
   React.useImperativeHandle(ref, () => ({
-    resetPage: () => setPageIndex(0),
-    resetToDefault: () => {
+    resetSelection: () => {
       setPageIndex(0)
       mutate()
     },
@@ -118,17 +122,15 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
     }
   }, [data?.data])
 
-  const handleSelectOne = React.useCallback((checked: boolean, columnId: string) => {
-    setSelectedColumns(prev => {
-      const next = new Set(prev)
-      if (checked) {
-        next.add(columnId)
-      } else {
-        next.delete(columnId)
-      }
-      return next
-    })
-  }, [])
+  const handleSelectOne = (checked: boolean, columnId: string) => {
+    const newSelection = new Set(selectedColumns)
+    if (checked) {
+      newSelection.add(columnId)
+    } else {
+      newSelection.delete(columnId)
+    }
+    setSelectedColumns(newSelection)
+  }
 
   const handleBatchPublish = async (publish: boolean) => {
     if (selectedColumns.size === 0) {
@@ -147,6 +149,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
       setSelectedColumns(new Set())
       mutate()
     } catch (error) {
+      console.error(publish ? "批量上架失败:" : "批量下架失败:", error)
       toast.error(publish ? "批量上架失败" : "批量下架失败")
     } finally {
       setIsUpdating(false)
@@ -172,6 +175,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
       setSelectedCategoryId(null)
       mutate()
     } catch (error) {
+      console.error("批量修改分类失败:", error)
       toast.error("批量修改分类失败")
     } finally {
       setIsUpdating(false)
@@ -191,13 +195,13 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
         ...firstSelectedColumn,
         // 添加批量删除标记
         _batch: Array.from(selectedColumns)
-      } as any)
+      } as ColumnWithBatch)
     }
   }
 
   const updateLocalColumn = React.useCallback((updatedColumn: Column, changedFields?: string[]) => {
     if (data?.data) {
-      const newData = {
+      const newData: ColumnData = {
         ...data,
         data: data.data.map((column: Column) =>
           column.id === updatedColumn.id ? updatedColumn : column
@@ -339,11 +343,15 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
                 </TableCell>
                 <TableCell className="p-2">
                   {column.avatar ? (
-                    <img
-                      src={column.avatar}
-                      alt={column.name}
-                      className="h-10 w-10 min-w-[40px] rounded-full object-cover"
-                    />
+                    <div className="relative h-10 w-10 min-w-[40px]">
+                      <Image
+                        src={column.avatar}
+                        alt={column.name}
+                        fill
+                        className="rounded-full object-cover"
+                        sizes="40px"
+                      />
+                    </div>
                   ) : (
                     <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-full bg-muted">
                       <BookOpen className="h-5 w-5 text-muted-foreground" />
@@ -376,7 +384,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
                 <TableCell className={cn(
                   isFieldUpdated(column.id, 'categoryId') && "text-red-600"
                 )}>
-                  {column.category?.name || "无分类"}
+                  {column.category?.name || "未分类"}
                 </TableCell>
                 <TableCell className="text-center">
                   <span className={cn(
@@ -424,7 +432,6 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
         pageSize={pageSize}
         total={total}
         onPageChange={setPageIndex}
-        onPageSizeChange={setPageSize}
       />
 
       {editingColumn && (
@@ -446,7 +453,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
           onOpenChange={(open) => !open && setDeletingColumn(null)}
           onSuccess={() => {
             // 如果是批量删除
-            if ((deletingColumn as any)._batch) {
+            if ('_batch' in deletingColumn) {
               setSelectedColumns(new Set())
             }
             setDeletingColumn(null)

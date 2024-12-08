@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { deleteCategory, type Category } from "@/services/categories"
+import { type Category } from "@/services/categories"
 
 interface DeleteCategoryDialogProps {
   category: Category | null

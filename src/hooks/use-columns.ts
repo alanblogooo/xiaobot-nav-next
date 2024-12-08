@@ -14,7 +14,7 @@ export function useColumns(params?: UseColumnsParams) {
   const { data, error, mutate } = useSWR(
     params ? `/api/columns?${new URLSearchParams(
       Object.entries(params)
-        .filter(([_, v]) => v !== undefined)
+        .filter(([, v]) => v !== undefined)
         .map(([k, v]) => [k, String(v)])
     )}` : '/api/columns', 
     async (url: string) => {
@@ -39,6 +39,6 @@ export function useColumns(params?: UseColumnsParams) {
     pageSize: data?.pageSize || 10,
     error,
     mutate,
-    isLoading: !data && !error,
+    isLoading: !data && !error
   }
 } 

@@ -76,6 +76,7 @@ export function EditColumnDialog({
         const data = await getCategories()
         setCategories(data)
       } catch (error) {
+        console.error("加载分类失败:", error)
         toast.error("加载分类失败")
       }
     }
@@ -126,6 +127,7 @@ export function EditColumnDialog({
       onOpenChange(false)
       toast.success("更新成功")
     } catch (error) {
+      console.error("更新专栏失败:", error)
       toast.error("更新失败")
     } finally {
       setIsLoading(false)

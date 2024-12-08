@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     console.log('Search params:', { pageIndex, pageSize, category, status, name, author })
 
     // 构建查询条件
-    const where: any = {}
+    const where: Prisma.ColumnWhereInput = {}
 
     if (category === 'no-category') {
       where.categoryId = null
