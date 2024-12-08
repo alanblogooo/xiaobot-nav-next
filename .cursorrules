@@ -1,0 +1,158 @@
+{
+  "projectRoot": ".",
+  "database": {
+    "path": "database",
+    "schema": "database/prisma/schema.prisma",
+    "data": "database/data/database.db",
+    "rules": [
+      {
+        "description": "数据库文件位置",
+        "message": "SQLite 数据库文件存储在 database/data/database.db"
+      },
+      {
+        "description": "Prisma Schema 位置",
+        "message": "数据库模型定义文件位于 database/prisma/schema.prisma"
+      }
+    ]
+  },
+  "models": {
+    "description": "数据模型概览 - 详细定义参考 database/prisma/schema.prisma",
+    "relationships": [
+      {
+        "description": "专栏与分类关系",
+        "type": "many-to-one",
+        "from": "Column",
+        "to": "Category",
+        "field": "categoryId"
+      }
+    ],
+    "Column": {
+      "tableName": "columns",
+      "description": "专栏数据模型，不包含用户认证",
+      "businessRules": [
+        "专栏必须有名称、作者和头像",
+        "URL 必须唯一",
+        "发布状态默认为未发布",
+        "订阅���和内容数从0开始计数"
+      ]
+    },
+    "Category": {
+      "tableName": "categories",
+      "description": "分类数据模型",
+      "businessRules": [
+        "分类名称必须唯一",
+        "作为专栏的分组依据"
+      ]
+    },
+    "InviteCode": {
+      "tableName": "invite_codes",
+      "description": "邀请码数据模型",
+      "businessRules": [
+        "邀请码必须唯一",
+        "使用自增ID作为主键"
+      ]
+    }
+  },
+  "importantNotes": [
+    {
+      "description": "不使用用户认证",
+      "message": "项目不使用任何用户认证功能，避免添加 auth 相关代码"
+    },
+    {
+      "description": "数据库位置",
+      "message": "使用 database 目录下的文件，不要使用根目录的 prisma 文件夹"
+    },
+    {
+      "description": "环境变量鉴权",
+      "message": "使用环境变量定义的账号密码进行用户中心登录"
+    }
+  ],
+  "auth": {
+    "type": "environment",
+    "description": "使用环境变量进行简单鉴权",
+    "variables": [
+      {
+        "name": "ADMIN_USERNAME",
+        "description": "管理员用户名",
+        "required": true
+      },
+      {
+        "name": "ADMIN_PASSWORD",
+        "description": "管理员密码",
+        "required": true
+      }
+    ],
+    "notes": [
+      "仅用于用户中心登录",
+      "不涉及数据库存储",
+      "避免在代码中硬编码凭据"
+    ]
+  },
+  "apiEndpoints": {
+    "batch": {
+      "path": "src/app/api/columns/batch",
+      "operations": ["POST", "DELETE"],
+      "description": "批量操作专栏"
+    },
+    "batchPublish": {
+      "path": "src/app/api/columns/batch/publish",
+      "operations": ["PUT"],
+      "description": "批量修改发布状态"
+    },
+    "batchCategory": {
+      "path": "src/app/api/columns/batch/category",
+      "operations": ["PUT"],
+      "description": "批量修改分类"
+    }
+  },
+  "projectStructure": {
+    "description": "非标准项目结构说明",
+    "rules": [
+      {
+        "description": "据库文件结构",
+        "message": "所有数据库相关文件都位于 database 目录下，包括 prisma、数据和脚本",
+        "directories": {
+          "prisma": "database/prisma",
+          "data": "database/data",
+          "scripts": "database/scripts"
+        }
+      },
+      {
+        "description": "中间件位置",
+        "message": "middleware.ts 位于根目录而不是 src 目录",
+        "path": "./middleware.ts"
+      }
+    ]
+  },
+  "sourceStructure": {
+    "description": "源代码目录结构规范",
+    "directories": {
+      "lib": {
+        "path": "src/lib",
+        "description": "公共库和工具函数",
+        "rules": [
+          {
+            "description": "数据库访问",
+            "message": "统一使用 @/lib/prisma 进行数据库访问"
+          }
+        ]
+      },
+      "hooks": {
+        "path": "src/hooks",
+        "description": "React Hooks 自定义钩子"
+      },
+      "services": {
+        "path": "src/services",
+        "description": "服务层代码，处理业务逻辑"
+      },
+      "components": {
+        "path": "src/components",
+        "description": "React 组件，包含 UI 组件库"
+      },
+      "app": {
+        "path": "src/app",
+        "description": "Next.js App Router 页面和 API 路由"
+      }
+    }
+  }
+} 
