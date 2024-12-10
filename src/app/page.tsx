@@ -30,6 +30,7 @@ export default function HomePage() {
   const loadingRef = React.useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [allColumns, setAllColumns] = React.useState<Column[]>([])
+  const [isChangingCategory, setIsChangingCategory] = React.useState(false)
 
   // 获取专栏数据
   const { data: columnsData, error: columnsError, mutate } = useSWR(
@@ -39,32 +40,47 @@ export default function HomePage() {
       pageSize,
       category: categoryFilter,
       status: 'published'
-    })
+    }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 2000,
+    }
   )
 
   // 当新数据到达时，将其添加到现有数据中
   React.useEffect(() => {
     if (columnsData?.data) {
       if (pageIndex === 0) {
-        // 如果是第一页，直接替换数据
         setAllColumns(columnsData.data)
       } else {
-        // 如果不是第一页，追加数据
         setAllColumns(prev => [...prev, ...columnsData.data])
       }
-      setIsLoading(false)
     }
   }, [columnsData?.data, pageIndex])
 
   // 当切换分类时重置所有状态
   const handleCategoryChange = React.useCallback((category: string) => {
+    if (isChangingCategory) {
+      return
+    }
+
+    setIsChangingCategory(true)
     setIsLoading(true)
     setPageIndex(0)
-    setAllColumns([])
     setCategoryFilter(category)
-    // 强制重新获取数据
-    mutate()
-  }, [mutate])
+    
+    // 先触发状态更新，然后等待数据加载
+    Promise.resolve().then(() => {
+      return mutate()
+        .catch(error => {
+          console.error('Failed to load columns:', error)
+        })
+        .finally(() => {
+          setIsChangingCategory(false)
+          setIsLoading(false)
+        })
+    })
+  }, [mutate, isChangingCategory])
 
   // 获取分类数据
   const { data: categories = [] } = useSWR<Category[]>(
@@ -104,11 +120,6 @@ export default function HomePage() {
     }
   }, [allColumns.length, total, isLoading])
 
-  // 当数据加载完时重置 loading 状态
-  React.useEffect(() => {
-    setIsLoading(false)
-  }, [allColumns])
-
   return (
     <div 
       className="min-h-screen"
@@ -138,10 +149,11 @@ export default function HomePage() {
         {/* 分类筛选栏 */}
         <div className="relative">
           <div className="container">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
               <Button
                 variant={categoryFilter === "" ? "secondary" : "ghost"}
                 onClick={() => handleCategoryChange("")}
+                disabled={isChangingCategory}
                 className={`min-w-[80px] h-[36px] ${
                   categoryFilter === "" 
                     ? "bg-[#a5463f] text-white hover:bg-[#a5463f] hover:text-white" 
@@ -155,6 +167,7 @@ export default function HomePage() {
                   key={category.id}
                   variant={categoryFilter === category.name ? "secondary" : "ghost"}
                   onClick={() => handleCategoryChange(category.name)}
+                  disabled={isChangingCategory}
                   className={`min-w-[80px] h-[36px] ${
                     categoryFilter === category.name 
                       ? "bg-[#a5463f] text-white hover:bg-[#a5463f] hover:text-white" 
