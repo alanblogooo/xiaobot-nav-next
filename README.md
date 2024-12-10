@@ -176,7 +176,7 @@ xiaobot-nav/
 │   ├── prisma/            # Prisma 配置和模型
 │   └── scripts/           # 数据库脚本
 ├── src/
-│   ├── app/              # Next.js 应用���由
+│   ├── app/              # Next.js 应用路由
 │   │   ├── api/         # API 路由
 │   │   └── (routes)/    # 页面路由
 │   ├── components/      # React 组件
