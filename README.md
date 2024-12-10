@@ -45,20 +45,42 @@
 3. 本项目默认文件已带了数据库和专栏数据（含100+小报童专栏），可以直接快速部署，如需要从零部署则删除数据库文件，参考从零开始部署步骤教程。
 
 
+**快速部署教程：**
 
-如果您已获得完整的项目文件（包含数据库和环境配置）：
+1. 克隆项目
+```bash
+git clone https://github.com/alanblogooo/xiaobot-nav.git
+cd xiaobot-nav
+```
 
-1. 安装依赖
+2. 配置环境变量
+```bash
+# 开发环境
+cp .env.local-example .env.local
+
+# 生产环境
+cp .env.production-example .env.production
+```
+
+修改配置文件中的管理员账号密码：
+```env
+ADMIN_USERNAME=your_username    # 修改为你的用户名
+ADMIN_PASSWORD=your_password    # 修改为你的密码
+```
+
+> 注意：必须先配置环境变量文件才能正常使用管理功能
+
+3. 安装依赖
 ```bash
 npm install
 ```
 
-2. 构建项目
+4. 构建项目
 ```bash
 npm run build
 ```
 
-3. 启动服务
+5. 启动服务
 ```bash
 npm run start
 ```
