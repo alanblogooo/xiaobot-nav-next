@@ -87,6 +87,8 @@ npm run start
 
 现在可以访问 [http://localhost:9520](http://localhost:9520) 查看应用。
 
+管理后台地址为：https://domain.com/user(域名后面加/user目录进入后台)
+
 
 
 ### 从零开始部署
