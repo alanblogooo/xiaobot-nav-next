@@ -8,7 +8,7 @@
     "auto-upgrade": "node database/scripts/auto-upgrade.js",
     "dev": "npx playwright install chromium && next dev -p 9520",
     "build": "npx playwright install chromium && next build",
-    "start": "next start -p 9520",
+    "start": "next start -p 9800",
     "lint": "next lint",
     "prisma:generate": "prisma generate --schema=./database/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate deploy --schema=./database/prisma/schema.prisma",
