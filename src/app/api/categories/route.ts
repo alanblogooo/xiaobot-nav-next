@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     console.error("创建分类失败:", error)
     
     // 检查是否是唯一性约束错误
-    if (error.message && error.message.includes('UNIQUE')) {
+    if (error instanceof Error && error.message.includes('UNIQUE')) {
       return NextResponse.json(
         { error: "分类名称已存在" }, 
         { status: 409 }
