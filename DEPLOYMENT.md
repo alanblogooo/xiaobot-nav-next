@@ -1,57 +1,64 @@
-# Vercel 部署说明
+# 部署说明
 
-## 环境配置
+## 环境要求
 
-### 开发环境
-- 使用本地 SQLite 数据库 (`database/data/database.db`)
-- 支持完整的增删改查功能
-- 包含 Playwright 预览功能
+- Node.js 18.17 或更高版本
+- npm 9.0 或更高版本
 
-### 生产环境 (Vercel)
-- 只支持查询功能
-- 数据库文件需要在部署时包含在代码中
-- Playwright 预览功能不可用
+## 支持的部署平台
 
-## 部署步骤
+### Vercel
+1. 推送代码到 Git 仓库
+2. 在 Vercel 控制台连接你的仓库
+3. 自动检测 Next.js 项目并部署
 
-1. **准备数据库**
-   ```bash
-   # 在开发环境中完成数据的增删改操作
-   npm run dev
-   ```
+### Netlify  
+1. 推送代码到 Git 仓库
+2. 在 Netlify 控制台连接你的仓库
+3. 自动检测 Next.js 项目并部署
 
-2. **提交到 Git**
-   ```bash
-   git add .
-   git commit -m "更新数据库数据"
-   git push
-   ```
+### Railway
+1. 推送代码到 Git 仓库
+2. 在 Railway 控制台连接你的仓库
+3. 自动检测 Next.js 项目并部署
 
-3. **部署到 Vercel**
-   - Vercel 会自动检测到 `vercel.json` 配置
-   - 构建时不会安装 Playwright (使用 `npm run build`)
-   - 数据库文件会作为静态资源包含在部署中
+### Render
+1. 推送代码到 Git 仓库
+2. 在 Render 控制台创建新的 Web Service
+3. 连接你的仓库并部署
+
+### 自建服务器
+1. 克隆代码到服务器
+2. 安装依赖：`npm install`
+3. 构建项目：`npm run build`
+4. 启动服务：`npm start`
+
+可选择使用 PM2 进程管理：
+```bash
+# 安装 PM2
+npm install -g pm2
+
+# 启动服务
+pm2 start npm --name "xiaobot-nav" -- start
+
+# 设置开机自启
+pm2 save
+pm2 startup
+```
 
 ## 环境变量
 
-### 可选环境变量 (用于 Turso 云数据库)
-如果你想使用云数据库而不是本地文件，可以设置：
+如果需要使用云数据库，可以设置以下环境变量：
 - `TURSO_DATABASE_URL`: Turso 数据库 URL
 - `TURSO_AUTH_TOKEN`: Turso 认证令牌
 
-### 管理员环境变量 (开发环境使用)
+管理员登录环境变量：
 - `ADMIN_USERNAME`: 管理员用户名
 - `ADMIN_PASSWORD`: 管理员密码
 
-## 工作流程
-
-1. **开发环境**: 管理数据 → 本地数据库更新
-2. **Git**: 提交包含数据库文件的代码
-3. **Vercel**: 自动部署，只提供查询服务
-
 ## 注意事项
 
-- 数据库文件大小限制：建议不超过 10MB
-- Vercel 函数超时：设置为 30 秒
-- 预览功能仅在开发环境可用
-- 所有写操作都保留在代码中，但 Vercel 上不会执行 
+- 项目默认使用本地 SQLite 数据库
+- 数据库文件包含在项目中，会一起部署
+- 生产环境建议只提供查询功能
+- 预览功能在某些平台可能不可用 

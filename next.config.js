@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 专门为Vercel优化的配置
+  // 生产环境优化配置
   swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
