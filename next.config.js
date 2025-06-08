@@ -7,12 +7,8 @@ const nextConfig = {
   },
   
   images: {
-    domains: [
-      // 添加您的图片域名，例如：
-      'example.com',
-      'your-image-domain.com',
-      'static.xiaobot.net'
-    ],
+    // 禁用图片优化，避免外部域名连接问题
+    unoptimized: true
   },
   
   webpack: (config, { isServer, dev }) => {
