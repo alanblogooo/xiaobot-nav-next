@@ -1,18 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 静态导出配置
+  output: 'export',
+  trailingSlash: true,
+  
   // 生产环境优化配置
   swcMinify: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: true,
   },
   
+  // 静态导出时禁用图片优化
   images: {
-    domains: [
-      // 添加您的图片域名，例如：
-      'example.com',
-      'your-image-domain.com',
-      'static.xiaobot.net'
-    ],
+    unoptimized: true
   },
   
   webpack: (config, { isServer, dev }) => {
@@ -27,7 +27,7 @@ const nextConfig = {
     }
     
     // 在生产环境中忽略 playwright 相关模块
-    if (process.env.NODE_ENV === 'production') {
+    if (!dev) {
       config.resolve.alias = {
         ...config.resolve.alias,
         'playwright': false,
