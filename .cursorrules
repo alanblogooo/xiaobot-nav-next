@@ -2,7 +2,7 @@
   "projectRoot": ".",
   "database": {
     "path": "database",
-    "schema": "database/prisma/schema.prisma",
+    "schema": "database/drizzle/schema.ts",
     "data": "database/data/database.db",
     "rules": [
       {
@@ -10,13 +10,13 @@
         "message": "SQLite 数据库文件存储在 database/data/database.db"
       },
       {
-        "description": "Prisma Schema 位置",
-        "message": "数据库模型定义文件位于 database/prisma/schema.prisma"
+        "description": "Drizzle Schema 位置",
+        "message": "数据库模型定义文件位于 database/drizzle/schema.ts"
       }
     ]
   },
   "models": {
-    "description": "数据模型概览 - 详细定义参考 database/prisma/schema.prisma",
+    "description": "数据模型概览 - 详细定义参考 database/drizzle/schema.ts",
     "relationships": [
       {
         "description": "专栏与分类关系",
@@ -60,7 +60,7 @@
     },
     {
       "description": "数据库位置",
-      "message": "使用 database 目录下的文件，不要使用根目录的 prisma 文件夹"
+      "message": "使用 database 目录下的文件，使用 Drizzle ORM 进行数据库操作"
     },
     {
       "description": "环境变量鉴权",
@@ -110,9 +110,9 @@
     "rules": [
       {
         "description": "据库文件结构",
-        "message": "所有数据库相关文件都位于 database 目录下，包括 prisma、数据和脚本",
+        "message": "所有数据库相关文件都位于 database 目录下，包括 drizzle、数据和脚本",
         "directories": {
-          "prisma": "database/prisma",
+          "drizzle": "database/drizzle",
           "data": "database/data",
           "scripts": "database/scripts"
         }
@@ -133,7 +133,7 @@
         "rules": [
           {
             "description": "数据库访问",
-            "message": "统一使用 @/lib/prisma 进行数据库访问"
+            "message": "统一使用 @/lib/db 进行数据库访问"
           }
         ]
       },

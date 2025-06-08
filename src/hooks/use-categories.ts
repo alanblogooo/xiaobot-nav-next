@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { Category } from '@prisma/client'
+import { Category } from '@/services/columns'
 
 export function useCategories() {
   const { data, error, mutate } = useSWR<Category[]>('/api/categories', async (url: string) => {

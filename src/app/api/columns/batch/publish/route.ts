@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma"
+import { db } from "@/lib/db"
+import { columns } from "../../../../../../database/drizzle/schema"
+import { inArray } from "drizzle-orm"
 import { NextResponse } from "next/server"
 
 export async function PUT(req: Request) {
@@ -11,16 +13,12 @@ export async function PUT(req: Request) {
     }
 
     // 批量更新发布状态
-    await prisma.column.updateMany({
-      where: {
-        id: {
-          in: ids
-        }
-      },
-      data: {
-        isPublished: publish
-      }
-    })
+    await db.update(columns)
+      .set({ 
+        isPublished: publish,
+        updatedAt: new Date()
+      })
+      .where(inArray(columns.id, ids))
 
     return new NextResponse("Success", { status: 200 })
   } catch (error) {

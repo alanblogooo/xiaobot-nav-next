@@ -29,9 +29,13 @@ if (fs.existsSync(dbPath)) {
 try {
   // 应用数据库迁移
   console.log('正在初始化数据库...');
-  execSync('npx prisma generate --schema=./database/prisma/schema.prisma', { stdio: 'inherit' });
-  execSync('npx prisma migrate deploy --schema=./database/prisma/schema.prisma', { stdio: 'inherit' });
+  execSync('npm run db:migrate', { stdio: 'inherit' });
   console.log('数据库初始化完成！');
+
+  // 运行种子数据
+  console.log('正在填充种子数据...');
+  execSync('npm run db:seed', { stdio: 'inherit' });
+  console.log('种子数据填充完成！');
 
   // 显示下一步操作
   console.log('\n接下来你可以：');

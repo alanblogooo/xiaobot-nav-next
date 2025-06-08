@@ -5,17 +5,8 @@ import Link from "next/link"
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import useSWR from 'swr'
-import { getColumns } from '@/services/columns'
-import { getCategories } from '@/services/categories'
-import { getInviteCode } from '@/services/rebates'
-import type { Column } from '@prisma/client'
-import type { Category } from '@/services/categories'
-
-// 获取邀请码的 hook
-const useInviteCode = () => {
-  const { data } = useSWR('invite-code', getInviteCode)
-  return data?.code || ''
-}
+import { getHomepageData } from '@/services/homepage'
+import type { ColumnWithCategory } from '@/services/columns'
 
 // 生成推广链接的函数
 const getPromotionUrl = (originalUrl: string, inviteCode: string) => {
@@ -23,19 +14,18 @@ const getPromotionUrl = (originalUrl: string, inviteCode: string) => {
 }
 
 export default function HomePage() {
-  const inviteCode = useInviteCode()
   const [categoryFilter, setCategoryFilter] = React.useState<string>("")
   const [pageIndex, setPageIndex] = React.useState(0)
   const pageSize = 12
   const loadingRef = React.useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [allColumns, setAllColumns] = React.useState<Column[]>([])
+  const [allColumns, setAllColumns] = React.useState<ColumnWithCategory[]>([])
   const [isChangingCategory, setIsChangingCategory] = React.useState(false)
 
-  // 获取专栏数据
-  const { data: columnsData, error: columnsError, mutate } = useSWR(
-    ['columns', pageIndex, pageSize, categoryFilter],
-    () => getColumns({
+  // 使用优化的首页数据获取，减少网络请求
+  const { data: homepageData, error: homepageError, mutate } = useSWR(
+    ['homepage', pageIndex, pageSize, categoryFilter],
+    () => getHomepageData({
       pageIndex,
       pageSize,
       category: categoryFilter,
@@ -43,9 +33,29 @@ export default function HomePage() {
     }),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 2000,
+      dedupingInterval: 5000, // 增加去重间隔
+      keepPreviousData: true, // 保持之前的数据，减少loading状态
     }
   )
+
+  // 缓存计算结果，避免重复计算
+  const { columnsData, categories, inviteCode, total } = React.useMemo(() => {
+    if (!homepageData) {
+      return {
+        columnsData: null,
+        categories: [],
+        inviteCode: '',
+        total: 0
+      }
+    }
+    
+    return {
+      columnsData: homepageData.columns,
+      categories: homepageData.categories,
+      inviteCode: homepageData.inviteCode,
+      total: homepageData.columns.total
+    }
+  }, [homepageData])
 
   // 当新数据到达时，将其添加到现有数据中
   React.useEffect(() => {
@@ -58,7 +68,7 @@ export default function HomePage() {
     }
   }, [columnsData?.data, pageIndex])
 
-  // 当切换分类时重置所有状态
+  // 优化分类切换处理，使用useCallback减少重新渲染
   const handleCategoryChange = React.useCallback((category: string) => {
     if (isChangingCategory) {
       return
@@ -73,7 +83,7 @@ export default function HomePage() {
     Promise.resolve().then(() => {
       return mutate()
         .catch(error => {
-          console.error('Failed to load columns:', error)
+          console.error('Failed to load homepage data:', error)
         })
         .finally(() => {
           setIsChangingCategory(false)
@@ -81,14 +91,6 @@ export default function HomePage() {
         })
     })
   }, [mutate, isChangingCategory])
-
-  // 获取分类数据
-  const { data: categories = [] } = useSWR<Category[]>(
-    'categories',
-    () => getCategories()
-  )
-
-  const total = columnsData?.total || 0
 
   // 处理滚动加载
   React.useEffect(() => {
@@ -119,6 +121,88 @@ export default function HomePage() {
       }
     }
   }, [allColumns.length, total, isLoading])
+
+  // 使用React.memo优化专栏项目组件
+  const ColumnItem = React.memo(({ column }: { column: ColumnWithCategory }) => (
+    <div className="w-full max-w-[381px]">
+      <div className="group relative rounded-lg bg-white/60 backdrop-blur-[5px] p-6 hover:shadow-lg transition-shadow h-full">
+        {/* 头像和标题行 */}
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-12 flex-shrink-0">
+            {column.avatar && column.avatar.startsWith('http') ? (
+              <Image
+                src={column.avatar}
+                alt={column.name}
+                width={48}
+                height={48}
+                className="h-full w-full rounded object-cover"
+                loading="lazy" // 添加懒加载优化
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Jo9Xbn1Smsp4v/9k="
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded bg-gray-100">
+                📚
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-base">
+              <Link
+                href={getPromotionUrl(column.url, inviteCode)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#a5463f] block truncate"
+                title={column.name}
+              >
+                {column.name}
+              </Link>
+            </h3>
+            <div className="mt-1 text-sm text-gray-500">@{column.author}</div>
+          </div>
+        </div>
+
+        {/* 数据统计 */}
+        <div className="mt-4 flex gap-3">
+          <div className="flex-1 rounded-lg border-black/[0.05] border px-3 py-2">
+            <div className="text-xs text-gray-500">订阅</div>
+            <div className="mt-1 font-bold text-red-500">
+              {column.subscribers} 🔥
+            </div>
+          </div>
+          <div className="flex-1 rounded-lg border-black/[0.05] border px-3 py-2">
+            <div className="text-xs text-gray-500">内容</div>
+            <div className="mt-1 font-bold text-gray-900">{column.contentCount}</div>
+          </div>
+        </div>
+
+        {/* 简介 */}
+        <div className="mt-4">
+          <div className="text-sm text-gray-600 border-black/[0.05] border rounded-lg p-3 min-h-[220px] max-h-[220px] overflow-y-auto no-scrollbar">
+            {column.description || "暂无简介"}
+          </div>
+        </div>
+
+        {/* 订阅按钮 */}
+        <div className="mt-4">
+          <Link
+            href={getPromotionUrl(column.url, inviteCode)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button 
+              variant="outline" 
+              className="w-full bg-transparent border-[#a5463f]/10 text-[#a5463f] hover:bg-[#a5463f] hover:text-white transition-colors"
+            >
+              立即订阅
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  ))
+
+  ColumnItem.displayName = 'ColumnItem'
 
   return (
     <div 
@@ -185,80 +269,8 @@ export default function HomePage() {
         <div className="py-8">
           <div className="container max-w-[1203px]">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 justify-items-center">
-              {allColumns.map((column: Column) => (
-                <div key={column.id} className="w-full max-w-[381px]">
-                  <div className="group relative rounded-lg bg-white/60 backdrop-blur-[5px] p-6 hover:shadow-lg transition-shadow h-full">
-                    {/* 头像和标题行 */}
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 flex-shrink-0">
-                        {column.avatar && column.avatar.startsWith('http') ? (
-                          <Image
-                            src={column.avatar}
-                            alt={column.name}
-                            width={48}
-                            height={48}
-                            className="h-full w-full rounded object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center rounded bg-gray-100">
-                            📚
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-base">
-                          <Link
-                            href={getPromotionUrl(column.url, inviteCode)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-[#a5463f] block truncate"
-                            title={column.name}
-                          >
-                            {column.name}
-                          </Link>
-                        </h3>
-                        <div className="mt-1 text-sm text-gray-500">@{column.author}</div>
-                      </div>
-                    </div>
-
-                    {/* 数据统计 */}
-                    <div className="mt-4 flex gap-3">
-                      <div className="flex-1 rounded-lg border-black/[0.05] border px-3 py-2">
-                        <div className="text-xs text-gray-500">订阅</div>
-                        <div className="mt-1 font-bold text-red-500">
-                          {column.subscribers} 🔥
-                        </div>
-                      </div>
-                      <div className="flex-1 rounded-lg border-black/[0.05] border px-3 py-2">
-                        <div className="text-xs text-gray-500">内容</div>
-                        <div className="mt-1 font-bold text-gray-900">{column.contentCount}</div>
-                      </div>
-                    </div>
-
-                    {/* 简介 */}
-                    <div className="mt-4">
-                      <div className="text-sm text-gray-600 border-black/[0.05] border rounded-lg p-3 min-h-[220px] max-h-[220px] overflow-y-auto no-scrollbar">
-                        {column.description || "暂无简介"}
-                      </div>
-                    </div>
-
-                    {/* 订阅按钮 */}
-                    <div className="mt-4">
-                      <Link
-                        href={getPromotionUrl(column.url, inviteCode)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button 
-                          variant="outline" 
-                          className="w-full bg-transparent border-[#a5463f]/10 text-[#a5463f] hover:bg-[#a5463f] hover:text-white transition-colors"
-                        >
-                          立即订阅
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+              {allColumns.map((column: ColumnWithCategory) => (
+                <ColumnItem key={column.id} column={column} />
               ))}
             </div>
           </div>
@@ -277,7 +289,7 @@ export default function HomePage() {
         )}
 
         {/* 空状态 */}
-        {allColumns.length === 0 && !columnsError && (
+        {allColumns.length === 0 && !homepageError && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
               <svg

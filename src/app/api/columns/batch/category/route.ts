@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma"
+import { db } from "@/lib/db"
+import { columns, categories } from "../../../../../../database/drizzle/schema"
+import { inArray, eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 
 export async function PUT(req: Request) {
@@ -11,27 +13,19 @@ export async function PUT(req: Request) {
     }
 
     // 验证分类是否存在
-    const category = await prisma.category.findUnique({
-      where: {
-        id: categoryId
-      }
-    })
+    const category = await db.select().from(categories).where(eq(categories.id, categoryId)).limit(1)
 
-    if (!category) {
+    if (category.length === 0) {
       return new NextResponse("Category not found", { status: 404 })
     }
 
     // 批量更新分类
-    await prisma.column.updateMany({
-      where: {
-        id: {
-          in: ids
-        }
-      },
-      data: {
-        categoryId
-      }
-    })
+    await db.update(columns)
+      .set({ 
+        categoryId,
+        updatedAt: new Date()
+      })
+      .where(inArray(columns.id, ids))
 
     return new NextResponse("Success", { status: 200 })
   } catch (error) {

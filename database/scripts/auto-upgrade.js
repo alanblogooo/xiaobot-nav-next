@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function autoUpgrade() {
-  console.log('=== 自动升级程序 ===\n');
+  console.log('=== 自动升级程序 (Drizzle) ===\n');
   
   try {
     // 1. 检查数据库文件
@@ -44,24 +44,41 @@ async function autoUpgrade() {
       console.log('未发现数据库文件，将创建新数据库');
     }
 
-    // 3. 更新数据库结构
+    // 3. 更新数据库结构（使用 Drizzle）
     console.log('\n正在更新数据库...');
-    execSync('npx prisma generate --schema=./database/prisma/schema.prisma', {
-      stdio: 'inherit'
-    });
-    execSync('npx prisma migrate deploy --schema=./database/prisma/schema.prisma', {
-      stdio: 'inherit'
-    });
-    console.log('✓ 数据库更新完成');
+    
+    try {
+      // 生成 Drizzle 迁移文件
+      console.log('生成 Drizzle 迁移...');
+      execSync('npm run db:generate', {
+        stdio: 'inherit'
+      });
+      
+      // 推送 schema 到数据库
+      console.log('更新数据库 schema...');
+      execSync('npm run db:migrate', {
+        stdio: 'inherit'
+      });
+      
+      console.log('✓ 数据库更新完成');
+    } catch (dbError) {
+      console.log('数据库操作出现问题，尝试初始化...');
+      execSync('npm run init', {
+        stdio: 'inherit'
+      });
+    }
 
     console.log('\n=== 升级成功！===');
-    console.log('\n您可以运行 npm start 启动应用\n');
+    console.log('\n您可以运行以下命令：');
+    console.log('- npm run dev  # 开发环境');
+    console.log('- npm run build # 构建');
+    console.log('- npm start    # 生产环境\n');
 
   } catch (error) {
     console.error('\n升级失败！', error);
     console.log('\n如何恢复：');
     console.log('1. 使用您之前备份的数据库文件替换 database/data/database.db');
-    console.log('2. 重新运行 npm start');
+    console.log('2. 重新运行 npm run auto-upgrade');
     process.exit(1);
   }
 }

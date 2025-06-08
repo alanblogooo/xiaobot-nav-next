@@ -12,7 +12,7 @@ import { DeleteColumnDialog } from "@/components/columns/delete-column-dialog"
 import { BatchAddColumnsDialog } from "@/components/columns/batch-add-columns-dialog"
 import { useColumns } from "@/hooks/use-columns"
 import { useCategories } from "@/hooks/use-categories"
-import { Column } from "@prisma/client"
+import { Column } from "@/services/columns"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -28,8 +28,8 @@ interface ExtendedColumn extends Omit<Column, 'category'> {
   category?: {
     id: string
     name: string
-    createdAt: Date
-    updatedAt: Date
+    createdAt: Date | null
+    updatedAt: Date | null
   } | null
   onEdit?: (column: ExtendedColumn) => void
   onDelete?: (column: ExtendedColumn) => void

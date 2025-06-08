@@ -31,7 +31,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { EditColumnDialog } from "./edit-column-dialog"
 import { DeleteColumnDialog } from "./delete-column-dialog"
-import { getColumns, updateColumn, type Column } from "@/services/columns"
+import { getColumns, updateColumn, type Column, type ColumnWithCategory } from "@/services/columns"
 import { getCategories, type Category } from "@/services/categories"
 import { cn } from "@/lib/utils"
 import useSWR from 'swr'
@@ -50,12 +50,12 @@ interface TableRef {
   resetSelection: () => void
 }
 
-interface ColumnWithBatch extends Column {
+interface ColumnWithBatch extends ColumnWithCategory {
   _batch?: string[];
 }
 
 interface ColumnData {
-  data: Column[];
+  data: ColumnWithCategory[];
   total: number;
   pageIndex: number;
   pageSize: number;
@@ -71,8 +71,8 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
 }, ref) => {
   const [pageIndex, setPageIndex] = React.useState(0)
   const pageSize = 10
-  const [editingColumn, setEditingColumn] = React.useState<Column | null>(null)
-  const [deletingColumn, setDeletingColumn] = React.useState<Column | null>(null)
+  const [editingColumn, setEditingColumn] = React.useState<ColumnWithCategory | null>(null)
+  const [deletingColumn, setDeletingColumn] = React.useState<ColumnWithCategory | null>(null)
   const [selectedColumns, setSelectedColumns] = React.useState<Set<string>>(new Set())
   const [isUpdating, setIsUpdating] = React.useState(false)
   const [showBatchCategoryDialog, setShowBatchCategoryDialog] = React.useState(false)
@@ -116,7 +116,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
 
   const handleSelectAll = React.useCallback((checked: boolean) => {
     if (checked && data?.data) {
-      setSelectedColumns(new Set(data.data.map((column: Column) => column.id)))
+      setSelectedColumns(new Set(data.data.map((column: ColumnWithCategory) => column.id)))
     } else {
       setSelectedColumns(new Set())
     }
@@ -189,7 +189,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
     }
 
     // 找到第一个选中的专栏作为删除对话框的目标
-    const firstSelectedColumn = data?.data.find((column: Column) => selectedColumns.has(column.id))
+    const firstSelectedColumn = data?.data.find((column: ColumnWithCategory) => selectedColumns.has(column.id))
     if (firstSelectedColumn) {
       setDeletingColumn({
         ...firstSelectedColumn,
@@ -327,7 +327,7 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
             </TableRow>
           </TableHeader>
           <TableBody>
-            {columns.map((column: Column) => (
+            {columns.map((column: ColumnWithCategory) => (
               <TableRow 
                 key={column.id}
                 className={cn(
@@ -398,10 +398,10 @@ export const ColumnsTable = React.memo(React.forwardRef<TableRef, ColumnsTablePr
                   </span>
                 </TableCell>
                 <TableCell>
-                  {new Date(column.createdAt).toLocaleDateString()}
+                  {column.createdAt ? new Date(column.createdAt).toLocaleDateString() : '-'}
                 </TableCell>
                 <TableCell>
-                  {new Date(column.updatedAt).toLocaleDateString()}
+                  {column.updatedAt ? new Date(column.updatedAt).toLocaleDateString() : '-'}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-center gap-2">

@@ -1,10 +1,32 @@
 import { NextResponse } from 'next/server';
-import { chromium } from 'playwright';
-import type { Browser } from 'playwright';
-import { execSync } from 'child_process';
+
+// 动态导入 Playwright，避免在生产环境出错
+const loadPlaywright = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('预览功能在生产环境中不可用');
+  }
+  
+  try {
+    const { chromium } = await import('playwright');
+    return chromium;
+  } catch (error) {
+    throw new Error('Playwright 未安装或不可用');
+  }
+};
 
 export async function POST(request: Request) {
-  let browser: Browser | null = null;
+  // 生产环境直接返回不支持
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { 
+        error: '预览功能在生产环境中不可用',
+        message: '请在开发环境中使用此功能'
+      },
+      { status: 503 }
+    );
+  }
+
+  let browser: any = null;
   try {
     const { urls } = await request.json();
 
@@ -24,6 +46,8 @@ export async function POST(request: Request) {
 
     try {
       console.log('正在启动浏览器...');
+      const chromium = await loadPlaywright();
+      
       browser = await chromium.launch({
         headless: true,
         args: [
@@ -32,9 +56,10 @@ export async function POST(request: Request) {
           '--no-sandbox',
           '--disable-setuid-sandbox'
         ]
-      }).catch(async (error) => {
+      }).catch(async (error: any) => {
         console.error('浏览器启动失败，尝试重新安装:', error);
         try {
+          const { execSync } = await import('child_process');
           execSync('npx playwright install chromium', { stdio: 'inherit' });
           // 重新尝试启动
           return await chromium.launch({
@@ -72,10 +97,10 @@ export async function POST(request: Request) {
     });
 
     const results = await Promise.all(
-      urls.map(async (url) => {
+      urls.map(async (url: string) => {
         const page = await context.newPage();
         try {
-          console.log('正在访问��面:', url);
+          console.log('正在访问页面:', url);
           await page.goto(url, {
             waitUntil: 'networkidle',
             timeout: 30000

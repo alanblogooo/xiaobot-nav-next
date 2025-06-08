@@ -19,7 +19,7 @@
 
 - TypeScript
 
-- Prisma
+- Drizzle ORM
 
 - SQLite
 
@@ -203,7 +203,8 @@ npm run dev
 xiaobot-nav/
 ├── database/               # 数据库相关文件
 │   ├── data/              # SQLite 数据库文件
-│   └── prisma/            # Prisma 配置和模型
+│   ├── drizzle/           # Drizzle ORM schema 和配置
+│   └── scripts/           # 数据库脚本
 ├── src/
 │   ├── app/              # Next.js 应用路由
 │   │   ├── api/         # API 路由

@@ -1,12 +1,20 @@
-import { PrismaClient } from "@prisma/client"
+import { drizzle } from 'drizzle-orm/libsql'
+import { createClient } from '@libsql/client'
+import * as schema from '../../database/drizzle/schema'
+import path from 'path'
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined
-}
+const isDevelopment = process.env.NODE_ENV === 'development'
 
-export const db = globalThis.prisma || new PrismaClient()
+// 开发环境使用本地文件，生产环境使用 Turso 或环境变量
+const databaseUrl = isDevelopment 
+  ? `file:${path.join(process.cwd(), 'database/data/database.db')}`
+  : process.env.TURSO_DATABASE_URL || `file:${path.join(process.cwd(), 'database/data/database.db')}`
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.prisma = db
-} 
+const authToken = process.env.TURSO_AUTH_TOKEN
+
+const client = createClient({
+  url: databaseUrl,
+  authToken: authToken
+})
+
+export const db = drizzle(client, { schema }) 

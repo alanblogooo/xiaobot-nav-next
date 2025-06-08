@@ -7,17 +7,19 @@
     "backup": "node database/scripts/backup-db.js",
     "auto-upgrade": "node database/scripts/auto-upgrade.js",
     "dev": "npx playwright install chromium && next dev -p 9520",
-    "build": "npx playwright install chromium && next build",
+    "build": "next build",
+    "build:dev": "npx playwright install chromium && next build",
     "start": "next start -p 9800",
     "lint": "next lint",
-    "prisma:generate": "prisma generate --schema=./database/prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate deploy --schema=./database/prisma/schema.prisma",
-    "prisma:studio": "prisma studio --schema=./database/prisma/schema.prisma",
-    "prisma:migrate:dev": "prisma migrate dev --schema=./database/prisma/schema.prisma",
-    "prisma:seed": "ts-node database/prisma/seed.ts"
+    "db:generate": "drizzle-kit generate:sqlite",
+    "db:migrate": "drizzle-kit push:sqlite",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx database/drizzle/seed.ts",
+    "verify:deployment": "node scripts/verify-deployment.js"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.1",
+    "@libsql/client": "^0.15.8",
+    "@paralleldrive/cuid2": "^2.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -36,10 +38,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.29.0",
     "lucide-react": "^0.467.0",
     "nanoid": "^5.0.9",
     "next": "^14.1.0",
-    "playwright": "^1.49.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^1.7.0",
@@ -57,16 +59,14 @@
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "dotenv-cli": "^7.4.4",
+    "drizzle-kit": "^0.20.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
+    "playwright": "^1.52.0",
     "postcss": "^8.4.49",
-    "prisma": "^6.0.1",
     "tailwindcss": "^3.4.16",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.7.2"
-  },
-  "prisma": {
-    "schema": "database/prisma/schema.prisma",
-    "seed": "ts-node database/prisma/seed.ts"
   }
 }

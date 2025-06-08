@@ -1,14 +1,16 @@
-import type { Column as PrismaColumn } from "@prisma/client"
+import type { InferSelectModel } from 'drizzle-orm'
+import { categories, columns } from '../../database/drizzle/schema'
 
-export interface Column extends Omit<PrismaColumn, 'categoryId'> {
+export type Category = InferSelectModel<typeof categories>
+export type Column = InferSelectModel<typeof columns>
+
+export interface ColumnWithCategory extends Column {
   category?: {
-    id: string;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  } | null;
-  categoryId?: string | null;
-  isPublished: boolean;
+    id: string
+    name: string
+    createdAt: Date | null
+    updatedAt: Date | null
+  } | null
 }
 
 export type ColumnCreateInput = {

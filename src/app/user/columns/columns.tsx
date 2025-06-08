@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { Column, Category } from "@prisma/client"
+import { Column } from "@/services/columns"
 import { Button } from "@/components/ui/button"
 import { BookOpen, Edit, Trash2, ExternalLink } from "lucide-react"
 import Image from "next/image"
@@ -30,7 +30,12 @@ import { toast } from "sonner"
 
 // 扩展 Column 类型
 interface ExtendedColumn extends Omit<Column, 'category'> {
-  category?: Category | null
+  category?: {
+    id: string
+    name: string
+    createdAt: Date | null
+    updatedAt: Date | null
+  } | null
   onEdit?: (column: ExtendedColumn) => void
   onDelete?: (column: ExtendedColumn) => void
   _batch?: string[]

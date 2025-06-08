@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { db } from "@/lib/db"
+import { inviteCodes } from "../../../../database/drizzle/schema"
+import { eq } from "drizzle-orm"
 
 export async function GET() {
   try {
-    let inviteCode = await prisma.inviteCode.findFirst()
+    const inviteCodeResult = await db.select().from(inviteCodes).limit(1)
     
-    if (!inviteCode) {
-      inviteCode = await prisma.inviteCode.create({
-        data: {
-          code: "",
-        },
-      })
+    if (inviteCodeResult.length === 0) {
+      const newInviteCode = await db.insert(inviteCodes).values({
+        code: "",
+      }).returning()
+      return NextResponse.json(newInviteCode[0])
     }
 
-    return NextResponse.json(inviteCode)
+    return NextResponse.json(inviteCodeResult[0])
   } catch (error) {
     console.error("获取邀请码失败:", error)
     return NextResponse.json(
@@ -35,20 +36,22 @@ export async function POST(request: Request) {
       )
     }
 
-    let inviteCode = await prisma.inviteCode.findFirst()
+    const inviteCodeResult = await db.select().from(inviteCodes).limit(1)
     
-    if (inviteCode) {
-      inviteCode = await prisma.inviteCode.update({
-        where: { id: inviteCode.id },
-        data: { code },
-      })
+    if (inviteCodeResult.length > 0) {
+      await db.update(inviteCodes)
+        .set({ 
+          code,
+          updatedAt: new Date()
+        })
+        .where(eq(inviteCodes.id, inviteCodeResult[0].id))
+      
+      const updatedResult = await db.select().from(inviteCodes).where(eq(inviteCodes.id, inviteCodeResult[0].id)).limit(1)
+      return NextResponse.json(updatedResult[0])
     } else {
-      inviteCode = await prisma.inviteCode.create({
-        data: { code },
-      })
+      const newInviteCode = await db.insert(inviteCodes).values({ code }).returning()
+      return NextResponse.json(newInviteCode[0])
     }
-
-    return NextResponse.json(inviteCode)
   } catch (error) {
     console.error("更新邀请码失败:", error)
     return NextResponse.json(

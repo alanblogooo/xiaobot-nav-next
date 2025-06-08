@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { Prisma } from "@prisma/client"
+import { db } from "@/lib/db"
+import { categories, columns } from "../../../../../database/drizzle/schema"
+import { eq, count } from "drizzle-orm"
 
 export async function PATCH(
   request: Request,
@@ -8,13 +9,16 @@ export async function PATCH(
 ) {
   try {
     const json = await request.json()
-    const category = await prisma.category.update({
-      where: { id: params.id },
-      data: {
+    
+    await db.update(categories)
+      .set({ 
         name: json.name,
-      },
-    })
-    return NextResponse.json(category)
+        updatedAt: new Date()
+      })
+      .where(eq(categories.id, params.id))
+    
+    const result = await db.select().from(categories).where(eq(categories.id, params.id)).limit(1)
+    return NextResponse.json(result[0])
   } catch (error) {
     console.error("Failed to update category:", error)
     return NextResponse.json(
@@ -32,9 +36,8 @@ export async function DELETE(
   
   try {
     // 先检查分类是否存在关联的专栏
-    const columnsCount = await prisma.column.count({
-      where: { categoryId: id }
-    })
+    const columnsCountResult = await db.select({ count: count() }).from(columns).where(eq(columns.categoryId, id))
+    const columnsCount = columnsCountResult[0].count
 
     if (columnsCount > 0) {
       return NextResponse.json(
@@ -46,22 +49,12 @@ export async function DELETE(
       )
     }
 
-    await prisma.category.delete({
-      where: { id }
-    })
+    await db.delete(categories).where(eq(categories.id, id))
 
     // 删除成功返回 204 状态码
     return new NextResponse(null, { status: 204 })
     
   } catch (error) {
-    // 如果是记录不存在的错误
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-      return NextResponse.json(
-        { error: "Category not found", message: "分类不存在或已被删除" },
-        { status: 404 }
-      )
-    }
-    
     // 其他错误
     console.error("删除分类失败:", error)
     return NextResponse.json(
