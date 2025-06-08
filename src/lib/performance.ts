@@ -41,7 +41,7 @@ export class PerformanceMonitor {
 
   // 获取所有查询统计
   getAllStats() {
-    const stats: Record<string, any> = {}
+    const stats: Record<string, ReturnType<typeof this.getQueryStats>> = {}
     for (const [queryName] of this.metrics) {
       stats[queryName] = this.getQueryStats(queryName)
     }
@@ -56,13 +56,13 @@ export class PerformanceMonitor {
 
 // 查询时间测量装饰器
 export function measureQueryTime(queryName: string) {
-  return function <T extends (...args: any[]) => Promise<any>>(
-    target: any,
+  return function <T extends (...args: unknown[]) => Promise<unknown>>(
+    target: unknown,
     propertyName: string,
     descriptor: TypedPropertyDescriptor<T>
   ) {
     const method = descriptor.value!
-    descriptor.value = async function (this: any, ...args: any[]) {
+    descriptor.value = async function (this: unknown, ...args: unknown[]) {
       const start = performance.now()
       try {
         const result = await method.apply(this, args)

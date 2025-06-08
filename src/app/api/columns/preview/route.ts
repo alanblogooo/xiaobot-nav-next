@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 // 动态导入 Playwright，避免在生产环境出错
 const loadPlaywright = async () => {
   if (process.env.NODE_ENV === 'production') {
@@ -9,7 +11,7 @@ const loadPlaywright = async () => {
   try {
     const { chromium } = await import('playwright');
     return chromium;
-  } catch (error) {
+  } catch {
     throw new Error('Playwright 未安装或不可用');
   }
 };
@@ -26,6 +28,7 @@ export async function POST(request: Request) {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let browser: any = null;
   try {
     const { urls } = await request.json();
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
           '--no-sandbox',
           '--disable-setuid-sandbox'
         ]
-      }).catch(async (error: any) => {
+      }).catch(async (error: unknown) => {
         console.error('浏览器启动失败，尝试重新安装:', error);
         try {
           const { execSync } = await import('child_process');

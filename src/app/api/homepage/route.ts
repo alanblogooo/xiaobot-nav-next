@@ -4,6 +4,8 @@ import { columns, categories, inviteCodes } from "../../../../database/drizzle/s
 import { eq, and, like, isNull, count, desc } from "drizzle-orm"
 import { measureQuery } from "@/lib/performance"
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
