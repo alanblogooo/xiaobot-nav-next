@@ -41,6 +41,7 @@
 本项目支持多种部署方式，包括：
 
 - **云平台部署**：Vercel、Netlify、Railway、Render
+- **静态部署**：EdgeOne Pages、GitHub Pages
 - **自建服务器**：PM2、直接部署
 
 详细的部署说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)。

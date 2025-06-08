@@ -27,6 +27,13 @@
 2. 在 Render 控制台创建新的 Web Service
 3. 连接你的仓库并部署
 
+### EdgeOne Pages / GitHub Pages（静态部署）
+1. 推送代码到 Git 仓库
+2. 在平台控制台连接你的仓库
+3. 设置构建命令：`npm run build:static`
+4. 设置输出目录：`out`
+5. 部署
+
 ### 自建服务器
 1. 克隆代码到服务器
 2. 安装依赖：`npm install`
@@ -48,17 +55,13 @@ pm2 startup
 
 ## 环境变量
 
-如果需要使用云数据库，可以设置以下环境变量：
-- `TURSO_DATABASE_URL`: Turso 数据库 URL
-- `TURSO_AUTH_TOKEN`: Turso 认证令牌
-
-管理员登录环境变量：
+管理员登录配置：
 - `ADMIN_USERNAME`: 管理员用户名
 - `ADMIN_PASSWORD`: 管理员密码
 
 ## 注意事项
 
-- 项目默认使用本地 SQLite 数据库
+- 项目使用本地 SQLite 数据库（`database/data/database.db`）
 - 数据库文件包含在项目中，会一起部署
 - 生产环境建议只提供查询功能
 - 预览功能在某些平台可能不可用 

@@ -1,12 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 静态导出配置（用于 EdgeOne Pages、GitHub Pages 等）
+  ...(process.env.EXPORT_MODE === 'static' && {
+    output: 'export',
+    trailingSlash: true,
+  }),
+  
   // 生产环境优化配置
   swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   
-  images: {
+  images: process.env.EXPORT_MODE === 'static' ? {
+    unoptimized: true
+  } : {
     domains: [
       // 添加您的图片域名，例如：
       'example.com',
