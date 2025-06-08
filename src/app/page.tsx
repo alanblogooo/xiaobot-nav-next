@@ -21,6 +21,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [allColumns, setAllColumns] = React.useState<ColumnWithCategory[]>([])
   const [isChangingCategory, setIsChangingCategory] = React.useState(false)
+  const loadingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   // 使用优化的首页数据获取，减少网络请求
   const { data: homepageData, error: homepageError, mutate } = useSWR(
@@ -35,6 +36,12 @@ export default function HomePage() {
       revalidateOnFocus: false,
       dedupingInterval: 5000, // 增加去重间隔
       keepPreviousData: true, // 保持之前的数据，减少loading状态
+      errorRetryCount: 3, // 最多重试3次
+      errorRetryInterval: 2000, // 重试间隔2秒
+      onError: (error) => {
+        console.error('首页数据加载失败:', error)
+        setIsLoading(false) // 错误时重置loading状态
+      }
     }
   )
 
@@ -64,6 +71,14 @@ export default function HomePage() {
         setAllColumns(columnsData.data)
       } else {
         setAllColumns(prev => [...prev, ...columnsData.data])
+      }
+      // 数据加载完成后重置loading状态
+      setIsLoading(false)
+      
+      // 清除超时定时器
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+        loadingTimeoutRef.current = null
       }
     }
   }, [columnsData?.data, pageIndex])
@@ -99,19 +114,35 @@ export default function HomePage() {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0]
-        if (target.isIntersecting && !isLoading && allColumns.length < total) {
+        // 增加更严格的条件检查
+        if (target.isIntersecting && 
+            !isLoading && 
+            !isChangingCategory && 
+            allColumns.length < total && 
+            allColumns.length > 0) { // 确保已有数据
+          console.log('触发滚动加载，当前页:', pageIndex, '总数:', total, '已加载:', allColumns.length)
           setIsLoading(true)
+          
+          // 设置15秒超时重置
+          if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current)
+          }
+          loadingTimeoutRef.current = setTimeout(() => {
+            console.warn('加载超时，重置loading状态')
+            setIsLoading(false)
+          }, 15000)
+          
           setPageIndex((prev) => prev + 1)
         }
       },
       {
         root: null,
-        rootMargin: '20px',
+        rootMargin: '50px', // 增加触发距离
         threshold: 0.1
       }
     )
 
-    if (currentLoadingRef) {
+    if (currentLoadingRef && allColumns.length > 0) {
       observer.observe(currentLoadingRef)
     }
 
@@ -120,7 +151,7 @@ export default function HomePage() {
         observer.unobserve(currentLoadingRef)
       }
     }
-  }, [allColumns.length, total, isLoading])
+  }, [allColumns.length, total, isLoading, isChangingCategory, pageIndex])
 
   // 使用React.memo优化专栏项目组件
   const ColumnItem = React.memo(({ column }: { column: ColumnWithCategory }) => (
