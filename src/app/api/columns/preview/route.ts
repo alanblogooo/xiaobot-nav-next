@@ -60,7 +60,7 @@ export async function POST(request: Request) {
               page.waitForSelector('h1', { timeout: 8000 }),
               page.waitForSelector('.paper-info', { timeout: 8000 })
             ])
-          } catch (e) {
+          } catch {
             console.warn(`页面元素等待超时，继续尝试抓取: ${url}`)
           }
           
@@ -178,8 +178,7 @@ export async function POST(request: Request) {
                   
                   // 从paper-info区域智能提取完整介绍
                   const lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-                  let descLines = []
-                  let skipNext = false
+                  const descLines = []
                   
                   for (let i = 0; i < lines.length; i++) {
                     const line = lines[i]
