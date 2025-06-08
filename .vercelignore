@@ -5,9 +5,12 @@ node_modules
 README.md
 DEPLOYMENT.md
 UPGRADE.md
-database/data
 database/scripts
 scripts
 playwright.config.js
 .playwright-cache
-test-results 
+test-results
+.next/cache
+.next/trace
+.swc
+*.tsbuildinfo 

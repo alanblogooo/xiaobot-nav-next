@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 专门为Vercel优化的配置
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
   images: {
     domains: [
       // 添加您的图片域名，例如：
@@ -8,7 +14,8 @@ const nextConfig = {
       'static.xiaobot.net'
     ],
   },
-  webpack: (config, { isServer }) => {
+  
+  webpack: (config, { isServer, dev }) => {
     // 在生产环境中排除大型包
     if (isServer) {
       config.externals = [
@@ -25,6 +32,17 @@ const nextConfig = {
         ...config.resolve.alias,
         'playwright': false,
         'playwright-core': false,
+      }
+      
+      // 完全禁用缓存
+      config.cache = false
+      
+      // 优化构建输出
+      config.optimization = {
+        ...config.optimization,
+        minimize: true,
+        sideEffects: false,
+        usedExports: true,
       }
     }
     
