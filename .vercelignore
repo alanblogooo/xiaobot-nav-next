@@ -1,5 +1,13 @@
 node_modules
-.next
 .env*.local
 .DS_Store
-*.log 
+*.log
+README.md
+DEPLOYMENT.md
+UPGRADE.md
+database/data
+database/scripts
+scripts
+playwright.config.js
+.playwright-cache
+test-results 

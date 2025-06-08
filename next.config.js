@@ -9,10 +9,25 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // 让 webpack 忽略 puppeteer 相关文件
+    // 在生产环境中排除大型包
     if (isServer) {
-      config.externals = [...config.externals, 'puppeteer-core']
+      config.externals = [
+        ...config.externals,
+        'puppeteer-core',
+        'playwright',
+        'playwright-core'
+      ]
     }
+    
+    // 在生产环境中忽略 playwright 相关模块
+    if (process.env.NODE_ENV === 'production') {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'playwright': false,
+        'playwright-core': false,
+      }
+    }
+    
     return config
   }
 }
