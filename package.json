@@ -8,6 +8,7 @@
     "auto-upgrade": "node database/scripts/auto-upgrade.js",
     "dev": "npx playwright install chromium && next dev -p 9520",
     "build": "next build",
+    "build:vercel": "next build",
     "build:dev": "npx playwright install chromium && next build",
     "start": "next start -p 9800",
     "lint": "next lint",
